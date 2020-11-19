@@ -54,15 +54,19 @@ def random_sampling(filename: str, config_class_features: dict, config_classinfo
     features_list = list(features_values.keys())
     sample_size = int(len(features_list) * p)
     
+    if sample_size < 1:
+        sample_size = 1
+    
     sample = defaultdict()
     if 'necessary' in config_class_features[classList[0][0]].keys(): # check if the component has a necessary feature
         feature = config_class_features[component_name]['necessary'][0]
         sample[feature] = random.sample(list(features_values[feature]), 1)[0]
         features_list.remove(feature)
         sample_size -= 1
-       
-    sample_features = random.sample(features_list, sample_size)
-    for feature in sample_features:
-        sample[feature] = random.sample(list(features_values[feature]), 1)[0]
+        
+    if sample_size > 0:   
+        sample_features = random.sample(features_list, sample_size)
+        for feature in sample_features:
+            sample[feature] = random.sample(list(features_values[feature]), 1)[0]
         
     return sample
