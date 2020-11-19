@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
 import os
 import json
 import random
+from collections import defaultdict
 from typing import Tuple, Dict, Sequence, List, Set
 
 
@@ -41,7 +41,6 @@ class sampling():
         config_class_features: the class features info of all components (in "config/config-class-features.json")
         config_classinfo: the class info of all components (in "config/config-classinfo.json")
         p: the portion of features needs sampling
-        returns the sample
         """
         self.component_name = os.path.splitext(filename)[0].replace("_"," ") # obtain the name of the component (e.g. "Active Filters")
         self.config_class_features = config_class_features
@@ -57,13 +56,16 @@ class sampling():
         self.component_config_class_features = list(config_class_features[self.component_class].keys())
     
     def random_sampling(self) -> dict:
+        """
+        returns a sample
+        """
         features_list = self.features_list.copy()
         
         sample_size = int(len(features_list) * self.p)
         if sample_size < 1: # if sample_size is too small, set it to 1
             sample_size = 1
             
-        sample = {}
+        sample = defaultdict()
         if "necessary" in self.component_config_class_features: # check if the component has a necessary feature
             feature = self.config_class_features[self.component_class]['necessary'][0]
             sample[feature] = random.sample(list(self.features_values[feature]), 1)[0] ## TODO: sampling according to distribution
