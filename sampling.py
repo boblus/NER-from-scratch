@@ -11,16 +11,27 @@ from typing import Tuple, Dict, Sequence, List, Set
 
 def read_data(filename: str):
     """
-    filename: the name of a json file
+    filename: the name of a file
     returns the data of in the file
     """
     if filename[-5:] == ".json":
         directory = "formatData/" + filename
         with open(directory, 'r', encoding='utf-8') as file:
-            data = json.loads(file.read())
+            output = json.loads(file.read())
+    
+    elif filename == "pair-params":
+        directory = "formatData/config/" + filename
+        with open(directory, 'r', encoding='utf-8') as file:
+            data = file.read().split("\n\n")
+
+        output = defaultdict()
+        for pair in data:
+            pair = pair.replace(" ", "").replace("-", "").replace("(", "").replace(")", "").split("/")
+            output[pair[0]] = pair[1]
+   
     else:
-        raise ValueError("The input should be a json file.")
-    return data
+        raise ValueError("The input is not valid.")
+    return output
 
 
 def preprocess_config_class_features(config_class_features: dict) -> dict:
@@ -33,6 +44,18 @@ def preprocess_config_class_features(config_class_features: dict) -> dict:
         for label in config_class_features[component]:
             # "Rated (DC) Voltage (URdc)" in config-class-features appears as "RatedDCVoltageURdc" in a component file
             output[component][label] = [i.replace(" ", "").replace("(", "").replace(")", "") for i in config_class_features[component][label]]
+    return output
+
+
+def preprocess_config_numeric_fields(config_numeric_fields: list) -> list:
+    """
+    config_numeric_fields: the numeric fields of all components (in "config/config-numeric-fields.json")
+    returns a preprocessed config-class-features
+    """
+    output = []
+    for feature in config_class_features:
+        # "Rated (DC) Voltage (URdc)" in config-numeric-fields appears as "RatedDCVoltageURdc" in a component file
+        output.append(feature.replace(" ", "").replace("(", "").replace(")", ""))
     return output
 
 
@@ -49,7 +72,16 @@ def extract_feature_value(filename: str) -> dict:
 
 
 class sampling():
-    def __init__(self, filename: str, config_class_features: dict, config_classinfo: dict, p: float, most_relevant_p: float):
+    def __init__(
+        self,
+        filename: str,
+        config_class_features: dict,
+        config_classinfo: dict,
+        config_numeric_fields: list,
+        pair_params: dict,
+        p: float,
+        most_relevant_p: float
+    ):
         """
         filename: the filename of a component (e.g. "Active_Filters.json")
         config_class_features: the class features of all components (in "config/config-class-features.json")
@@ -59,6 +91,10 @@ class sampling():
         """
         self.component_name = os.path.splitext(filename)[0].replace("_"," ") # obtain the name of the component (e.g. "Active Filters")
         self.config_class_features = preprocess_config_class_features(config_class_features)
+        self.config_numeric_fields = preprocess_config_numeric_fields(config_numeric_fields)
+        self.pair_params = pair_params
+        self.pair_params_keys = list(pair_params.keys())
+        self.pair_params_values = list(pair_params.values())
         self.p = p
         self.most_relevant_p = most_relevant_p
 
@@ -77,6 +113,39 @@ class sampling():
         # e.g. "Resistance Law" is not found in Array_Network_Resistors.json
         self.most_relevant_features_list = [i for i in list(self.config_class_features[self.component_class]["Most Relevant"]) if i in self.features_list]
     
+    
+    def exist_in_pair(self, sample_features: list) -> list:
+        output = []
+        for feature in sample_features:
+            output.append(feature)
+            if feature in self.pair_params_keys:
+                if random.uniform(0, 1) < 0.9:
+                    output.append(self.pair_params[feature])
+            if feature in self.pair_params_values:
+                if random.uniform(0, 1) < 0.9:
+                    pair_params = {value: key for key, value in self.pair_params.items()}
+                    output.append(pair_params[feature])
+        return output
+
+    
+    def sample_value(self, sample_features: list):
+        """
+        samples the value of a feature
+        """
+        for feature in sample_features:
+            if feature in self.config_numeric_fields: # check if the feature is numeric
+                n = 2
+                total_numeric = 0
+                for i in range(n):
+                    value = random.sample(self.features_values[feature], 1)[0]
+                    numeric = ''.join([item for item in filter(str.isdigit, value)]) # extract the numeric part of the value
+                    total_numeric += float(numeric)
+                unit = value.strip(numeric) # extract the unit of the value
+                self.sample[feature] = str(total_numeric / n) + unit
+            else:
+                self.sample[feature] = random.sample(self.features_values[feature], 1)[0]
+    
+    
     def random_sampling(self) -> dict:
         """
         returns a sample
@@ -91,24 +160,27 @@ class sampling():
             sample_size = 1
             most_relevant_features_size = 1
             
-        sample = {}
+        self.sample = {}
         if "necessary" in self.component_config_class_features: # check if the component has a necessary feature
-            feature = self.config_class_features[self.component_class]["necessary"][0]
-            sample[feature] = random.sample(list(self.features_values[feature]), 1)[0] ## TODO: sampling according to distribution
-            most_relevant_features_list.remove(feature)
-            sample_size -= 1
-            most_relevant_features_size -= 1
+            sample_features = self.config_class_features[self.component_class]["necessary"]
+            extended_sample_features = self.exist_in_pair(sample_features)
+            self.sample_value(extended_sample_features)
+            most_relevant_features_list = list(set(most_relevant_features_list) - set(extended_sample_features))
+            sample_size -= len(sample_features)
+            most_relevant_features_size -= len(sample_features)
             
         if most_relevant_features_size > 0:
-            sample_features = random.sample(most_relevant_features_list, most_relevant_features_size)
-            for feature in sample_features:
-                sample[feature] = random.sample(list(self.features_values[feature.replace(" ", "")]), 1)[0]
-                sample_size -= 1
+            if len(most_relevant_features_list) >= most_relevant_features_size:
+                sample_features = random.sample(most_relevant_features_list, most_relevant_features_size)
+            else:
+                sample_features = random.sample(most_relevant_features_list, len(most_relevant_features_list))
+            extended_sample_features = self.exist_in_pair(sample_features)
+            self.sample_value(extended_sample_features)
+            sample_size -= most_relevant_features_size
 
         if sample_size > 0:   
             sample_features = random.sample(features_list, sample_size)
-            for feature in sample_features:
-                sample[feature] = random.sample(list(self.features_values[feature]), 1)[0]
+            extended_sample_features = self.exist_in_pair(sample_features)
+            self.sample_value(extended_sample_features)
 
-        return sample
-
+        return self.sample
