@@ -20,8 +20,8 @@ def read_data(filename: str):
         with open(directory, 'r', encoding='utf-8') as file:
             output = json.loads(file.read())
     
-    elif filename == "pair-params":
-        directory = "formatData/config/" + filename
+    elif filename == "config/pair-params":
+        directory = "formatData/" + filename
         with open(directory, 'r', encoding='utf-8') as file:
             data = file.read().split("\n\n")
 
