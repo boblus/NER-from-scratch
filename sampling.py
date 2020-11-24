@@ -2,6 +2,7 @@
 # coding: utf-8
 
     
+import re
 import os
 import json
 import random
@@ -43,7 +44,7 @@ def preprocess_config_class_features(config_class_features: dict) -> dict:
     for component in config_class_features:
         for label in config_class_features[component]:
             # "Rated (DC) Voltage (URdc)" in config-class-features appears as "RatedDCVoltageURdc" in a component file
-            output[component][label] = [i.replace(" ", "").replace("(", "").replace(")", "") for i in config_class_features[component][label]]
+            output[component][label] = [i.replace(" ", "").replace("-", "").replace("(", "").replace(")", "") for i in config_class_features[component][label]]
     return output
 
 
@@ -53,9 +54,9 @@ def preprocess_config_numeric_fields(config_numeric_fields: list) -> list:
     returns a preprocessed config-class-features
     """
     output = []
-    for feature in config_class_features:
+    for feature in config_numeric_fields:
         # "Rated (DC) Voltage (URdc)" in config-numeric-fields appears as "RatedDCVoltageURdc" in a component file
-        output.append(feature.replace(" ", "").replace("(", "").replace(")", ""))
+        output.append(feature.replace(" ", "").replace("-", "").replace("(", "").replace(")", ""))
     return output
 
 
@@ -71,30 +72,43 @@ def extract_feature_value(filename: str) -> dict:
     return features_values
 
 
+def connect(sample: dict) -> str:
+    """
+    sample: the output of sampling.random_sampling()
+    returns the concatenation of values
+    """
+    output = ''
+    deliminter_list = ['#', ',', '/', ';', ':', '-', '_']
+    deliminter = random.sample(deliminter_list, 1)[0]
+    for key, value in sample.items():
+        if random.uniform(0, 1) > 0.9: # 10% chance to use another deliminter
+            output = output + str(value) + random.sample(deliminter_list, 1)[0]
+        else:
+            output = output + str(value) + deliminter
+    return re.sub("(" + "|".join(deliminter_list) + ")$", "", output)
+
+
 class sampling():
     def __init__(
         self,
         filename: str,
-        config_class_features: dict,
-        config_classinfo: dict,
-        config_numeric_fields: list,
-        pair_params: dict,
         p: float,
         most_relevant_p: float
     ):
         """
         filename: the filename of a component (e.g. "Active_Filters.json")
-        config_class_features: the class features of all components (in "config/config-class-features.json")
-        config_classinfo: the class info of all components (in "config/config-classinfo.json")
         p: the portion of features needs sampling
         most_relevant_p: the portion of most relevant features in a sample
         """
         self.component_name = os.path.splitext(filename)[0].replace("_"," ") # obtain the name of the component (e.g. "Active Filters")
         self.config_class_features = preprocess_config_class_features(config_class_features)
         self.config_numeric_fields = preprocess_config_numeric_fields(config_numeric_fields)
+        self.config_dynamic_units = config_dynamic_units
+        self.config_dynamic_units_keys = list(config_dynamic_units.keys())
         self.pair_params = pair_params
         self.pair_params_keys = list(pair_params.keys())
         self.pair_params_values = list(pair_params.values())
+        
         self.p = p
         self.most_relevant_p = most_relevant_p
 
@@ -137,11 +151,27 @@ class sampling():
                 n = 2
                 total_numeric = 0
                 for i in range(n):
-                    value = random.sample(self.features_values[feature], 1)[0]
-                    numeric = ''.join([item for item in filter(str.isdigit, value)]) # extract the numeric part of the value
+                    value = str(random.sample(self.features_values[feature], 1)[0])
+                    numeric = re.findall("-*\d+\.?\d*", value)[0] # extract the numeric part of the value
                     total_numeric += float(numeric)
                 unit = value.strip(numeric) # extract the unit of the value
-                self.sample[feature] = str(total_numeric / n) + unit
+                total_numeric = total_numeric / n
+                
+                # amplify the diversity of unit (e.g. 1000Ω -> 1kΩ)
+                if unit in self.config_dynamic_units_keys:
+                    new_unit = random.sample(list(self.config_dynamic_units[unit].keys()), 1)[0]
+                    mutator = float(self.config_dynamic_units[unit][new_unit])
+                    if mutator < 1:
+                        # test if total_numeric is greater than 1/mutator (e.g. normally we do not write 8000mW)
+                        while total_numeric >= 1 / mutator: 
+                            total_numeric = total_numeric * mutator
+                    if mutator > 1:
+                        # test if total_numeric is greater than the mutator (e.g. normally we do not write 8000kW)
+                        while total_numeric >= mutator: 
+                            total_numeric = total_numeric / mutator
+                    self.sample[feature] = str(round(total_numeric, 3)) + new_unit
+                else:
+                    self.sample[feature] = str(round(total_numeric, 3)) + unit
             else:
                 self.sample[feature] = random.sample(self.features_values[feature], 1)[0]
     
@@ -153,7 +183,7 @@ class sampling():
         features_list = list(set(self.features_list) - set(self.most_relevant_features_list))
         most_relevant_features_list = self.most_relevant_features_list.copy()
         
-        sample_size = int(len(features_list) * self.p)
+        sample_size = int(len(features_list) * self.p) ## sample_size [5, 6, 7, 8]
         most_relevant_features_size = int(sample_size * self.most_relevant_p)
                 
         if sample_size < 1: # if sample_size is too small, set the two sizes to 1
