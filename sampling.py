@@ -62,7 +62,7 @@ def preprocess_config_numeric_fields(config_numeric_fields: list) -> list:
 
 def extract_feature_value(filename: str) -> dict:
     """
-    filename: the filename of a component (e.g. "Active_Filters.json")
+    filename: the name of a component file (e.g. "Active_Filters.json")
     returns all the features of a component and their corresponding values 
     """
     features_values = defaultdict(list)
@@ -96,7 +96,7 @@ class sampling():
         most_relevant_p: float
     ):
         """
-        filename: the filename of a component (e.g. "Active_Filters.json")
+        filename: the name of a component file (e.g. "Active_Filters.json")
         p: the portion of features needs sampling
         most_relevant_p: the portion of most relevant features in a sample
         """
