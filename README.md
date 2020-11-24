@@ -1,5 +1,5 @@
 # sampling
-**1. read configuration files**  
+### 1. read configuration files  
 
 nota bene: please put all the configuration files under `formatData/config`  
 
@@ -11,7 +11,7 @@ config_dynamic_units = read_data("config/config-dynamic-units.json")
 pair_params = read_data("config/pair-params")
 ```
 
-**2. initialize `sampling` class**  
+### 2. initialize *sampling*  
 
 |  |  |  |
 |----|----|----|
@@ -27,7 +27,7 @@ pair_params = read_data("config/pair-params")
 rs = sampling("Array_Network_Resistors.json", 0.2, 0.6)
 ```
 
-**3. call `random_sampling` method**  
+### 3. call *random_sampling*  
 
 *Example:*
 ```python
@@ -46,7 +46,7 @@ rs.random_sampling()
 'NetworkType': 'BUSSED'}
 ```
 
-**4. concatenation**
+### 4. concatenate  
 
 *Example:*
 ```python
