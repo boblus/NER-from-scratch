@@ -129,6 +129,10 @@ class sampling():
     
     
     def exist_in_pair(self, sample_features: list) -> list:
+        """
+        sample_features: features need sampling
+        returns a new list of sample_features
+        """
         output = []
         for feature in sample_features:
             output.append(feature)
@@ -144,7 +148,7 @@ class sampling():
     
     def sample_value(self, sample_features: list):
         """
-        samples the value of a feature
+        sample_features: features need sampling
         """
         for feature in sample_features:
             if feature in self.config_numeric_fields: # check if the feature is numeric
@@ -171,7 +175,11 @@ class sampling():
                             total_numeric = total_numeric / mutator
                     self.sample[feature] = str(round(total_numeric, 3)) + new_unit
                 else:
-                    self.sample[feature] = str(round(total_numeric, 3)) + unit
+                    # amplify the diversity of the value (e.g. 0.25W -> 1/4W)
+                    if random.uniform(0, 1) < 0.7:
+                        self.sample[feature] = str(round(total_numeric, 3)) + unit
+                    else:
+                        self.sample[feature] = str(random.randint(1, 10)) + "/" + str(random.randint(1, 10)) + unit
             else:
                 self.sample[feature] = random.sample(self.features_values[feature], 1)[0]
     
@@ -213,4 +221,5 @@ class sampling():
             extended_sample_features = self.exist_in_pair(sample_features)
             self.sample_value(extended_sample_features)
 
-        return self.sample
+        return {self.component_class: {self.component_name: self.sample}}
+
