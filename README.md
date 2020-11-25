@@ -36,21 +36,22 @@ rs.random_sampling()
 
 *Output:*
 ```
-{'Resistance': '57.62kΩ',
-'SizeCode': '5030',
-'TemperatureCoefficient': '25ppm/°C',
-'RatedPowerDissipationP': '0.575MW',
-'ResistorType': 'ARRAY/NETWORK RESISTOR',
-'PackageLength': '8.6mm',
-'PackageHeight': '1.59mm',
-'NetworkType': 'BUSSED'}
+{'Resistors': {'Array Network Resistors': {'Resistance': '51500.0Ohm',
+  'SizeCode': '5030',
+  'TemperatureCoefficient': '25ppm/°C',
+  'RatedPowerDissipationP': '0.575MW',
+  'ResistorType': 'ARRAY/NETWORK RESISTOR',
+  'PackageLength': '8.6mm',
+  'PackageHeight': '1.59mm',
+  'NetworkType': 'BUSSED'}}}
 ```
 
 ### 4. concatenate  
 
 *Example:*
 ```python
-connect(rs.random_sampling())
+text = rs.random_sampling()
+connect(rs.sample)
 ```
 
 *Output:*
