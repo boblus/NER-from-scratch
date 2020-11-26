@@ -81,10 +81,11 @@ def connect(sample: dict) -> str:
     deliminter_list = ['#', ',', '/', ';', ':', '-', '_']
     deliminter = random.sample(deliminter_list, 1)[0]
     for key, value in sample.items():
-        if random.uniform(0, 1) > 0.9: # 10% chance to use another deliminter
-            output = output + str(value) + random.sample(deliminter_list, 1)[0]
-        else:
-            output = output + str(value) + deliminter
+        if key not in ["class", "category"]: 
+            if random.uniform(0, 1) > 0.9: # 10% chance to use another deliminter
+                output = output + str(value) + random.sample(deliminter_list, 1)[0]
+            else:
+                output = output + str(value) + deliminter
     return re.sub("(" + "|".join(deliminter_list) + ")$", "", output)
 
 
@@ -141,8 +142,8 @@ class sampling():
                     output.append(self.pair_params[feature])
             if feature in self.pair_params_values:
                 if random.uniform(0, 1) < 0.9:
-                    pair_params = {value: key for key, value in self.pair_params.items()}
-                    output.append(pair_params[feature])
+                    inversed_pair_params = {value: key for key, value in self.pair_params.items()}
+                    output.append(inversed_pair_params[feature])
         return output
 
     
@@ -198,7 +199,7 @@ class sampling():
             sample_size = 1
             most_relevant_features_size = 1
             
-        self.sample = {}
+        self.sample = {"class": self.component_class, "category": self.component_name}
         if "necessary" in self.component_config_class_features: # check if the component has a necessary feature
             sample_features = self.config_class_features[self.component_class]["necessary"]
             extended_sample_features = self.exist_in_pair(sample_features)
@@ -220,8 +221,8 @@ class sampling():
             sample_features = random.sample(features_list, sample_size)
             extended_sample_features = self.exist_in_pair(sample_features)
             self.sample_value(extended_sample_features)
-
-        return {self.component_class: {self.component_name: self.sample}}
+        
+        return self.sample
 
 
 config_class_features = read_data("config/config-class-features.json")
