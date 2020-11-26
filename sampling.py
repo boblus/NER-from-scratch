@@ -223,3 +223,9 @@ class sampling():
 
         return {self.component_class: {self.component_name: self.sample}}
 
+
+config_class_features = read_data("config/config-class-features.json")
+config_classinfo = read_data("config/config-classinfo.json")
+config_numeric_fields = read_data("config/config-numeric-fields.json")
+config_dynamic_units = read_data("config/config-dynamic-units.json")
+pair_params = read_data("config/pair-params")
