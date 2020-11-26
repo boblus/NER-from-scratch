@@ -1,17 +1,7 @@
 # sampling
-### 1. read configuration files  
+### 1. initialize *sampling*  
 
 nota bene: please put all the configuration files under `formatData/config`  
-
-```python
-config_class_features = read_data("config/config-class-features.json")
-config_classinfo = read_data("config/config-classinfo.json")
-config_numeric_fields = read_data("config/config-numeric-fields.json")
-config_dynamic_units = read_data("config/config-dynamic-units.json")
-pair_params = read_data("config/pair-params")
-```
-
-### 2. initialize *sampling*  
 
 |  |  |  |
 |----|----|----|
@@ -24,14 +14,16 @@ pair_params = read_data("config/pair-params")
 
 *Example:*
 ```python
-rs = sampling("Array_Network_Resistors.json", 0.2, 0.6)
+from sampling import *
+
+s = sampling("Array_Network_Resistors.json", 0.2, 0.6)
 ```
 
-### 3. call *random_sampling*  
+### 2. call *random_sampling*  
 
 *Example:*
 ```python
-rs.random_sampling()
+s.random_sampling()
 ```
 
 *Output:*
@@ -46,12 +38,12 @@ rs.random_sampling()
   'NetworkType': 'BUSSED'}}}
 ```
 
-### 4. concatenate  
+### 3. concatenate  
 
 *Example:*
 ```python
-text = rs.random_sampling()
-connect(rs.sample)
+text = s.random_sampling()
+connect(s.sample)
 ```
 
 *Output:*
