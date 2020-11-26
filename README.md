@@ -1,12 +1,15 @@
 # sampling
-### 1. initialize *sampling*  
 
-nota bene: please put all the configuration files under `formatData/config`  
+*nota bene:*  
+\* please put all the configuration files under `formatData/config`  
+\* do not sample on `Analog_Special_Function_Converters.json`, `Carbon_Composition_Resistors.json`, and `Carbon_Film_Resistors.json`
+
+### 1. initialize *sampling*  
 
 |  |  |  |
 |----|----|----|
 |**parameters:**|**filename:**|*str*|
-| | |the name of a component file (e.g. "Array_Network_Resistors.json")|
+| | |the name of a component file (e.g. `Array_Network_Resistors.json`)|
 | |**p:**|*int*|
 | | |the portion of features needs sampling|
 | |**most_relevant_p:**|*int*|
@@ -28,22 +31,22 @@ s.random_sampling()
 
 *Output:*
 ```
-{'Resistors': {'Array Network Resistors': {'Resistance': '51500.0Ohm',
-  'SizeCode': '5030',
-  'TemperatureCoefficient': '25ppm/°C',
-  'RatedPowerDissipationP': '0.575MW',
-  'ResistorType': 'ARRAY/NETWORK RESISTOR',
-  'PackageLength': '8.6mm',
-  'PackageHeight': '1.59mm',
-  'NetworkType': 'BUSSED'}}}
+{'class': 'Resistors',
+ 'category': 'Array Network Resistors',
+ 'Resistance': '9790.0O',
+ 'TemperatureCoefficient': '100ppm/°C',
+ 'SizeCode': '3040',
+ 'RatedPowerDissipationP': '1.19uW',
+ 'NumberofFunctions': '3.0',
+ 'LeadLength': '4.15',
+ 'LeadSpacing': '3/5'}
 ```
 
 ### 3. concatenate  
 
 *Example:*
 ```python
-text = s.random_sampling()
-connect(s.sample)
+connect(s.random_sampling())
 ```
 
 *Output:*
