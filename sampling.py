@@ -81,7 +81,7 @@ def connect(sample: dict) -> str:
     deliminter_list = ['#', ',', '/', ';', ':', '-', '_']
     deliminter = random.sample(deliminter_list, 1)[0]
     for key, value in sample.items():
-        if key not in ["class", "category"]: 
+        if key not in ["class", "category", "input class"]: 
             if random.uniform(0, 1) > 0.9: # 10% chance to use another deliminter
                 output = output + str(value) + random.sample(deliminter_list, 1)[0]
             else:
