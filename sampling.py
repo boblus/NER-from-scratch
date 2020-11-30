@@ -93,24 +93,21 @@ class sampling():
     def __init__(
         self,
         filename: str,
-        p: float,
         most_relevant_p: float
     ):
         """
         filename: the name of a component file (e.g. "Active_Filters.json")
-        p: the portion of features needs sampling
         most_relevant_p: the portion of most relevant features in a sample
         """
         self.component_name = os.path.splitext(filename)[0].replace("_"," ") # obtain the name of the component (e.g. "Active Filters")
         self.config_class_features = preprocess_config_class_features(config_class_features)
         self.config_numeric_fields = preprocess_config_numeric_fields(config_numeric_fields)
-        self.config_dynamic_units = config_dynamic_units
+        self.config_class_name_keys = list(config_class_name.keys())
         self.config_dynamic_units_keys = list(config_dynamic_units.keys())
         self.pair_params = pair_params
         self.pair_params_keys = list(pair_params.keys())
         self.pair_params_values = list(pair_params.values())
         
-        self.p = p
         self.most_relevant_p = most_relevant_p
 
         self.features_values = extract_feature_value(filename)
@@ -127,6 +124,9 @@ class sampling():
         # all of the features in config-class-features are not found in component files
         # e.g. "Resistance Law" is not found in Array_Network_Resistors.json
         self.most_relevant_features_list = [i for i in list(self.config_class_features[self.component_class]["Most Relevant"]) if i in self.features_list]
+        
+        self.units = set()
+        self.string_fields = set()
     
     
     def exist_in_pair(self, sample_features: list) -> list:
@@ -162,10 +162,15 @@ class sampling():
                 unit = value.strip(numeric) # extract the unit of the value
                 total_numeric = total_numeric / n
                 
+                self.units.add(unit)
+                
                 # amplify the diversity of unit (e.g. 1000Ω -> 1kΩ)
                 if unit in self.config_dynamic_units_keys:
-                    new_unit = random.sample(list(self.config_dynamic_units[unit].keys()), 1)[0]
-                    mutator = float(self.config_dynamic_units[unit][new_unit])
+                    new_unit = random.sample(list(config_dynamic_units[unit].keys()), 1)[0]
+                    mutator = float(config_dynamic_units[unit][new_unit])
+                    
+                    self.units.add(new_unit)
+                    
                     if mutator < 1:
                         # test if total_numeric is greater than 1/mutator (e.g. normally we do not write 8000mW)
                         while total_numeric >= 1 / mutator: 
@@ -183,6 +188,7 @@ class sampling():
                         self.sample[feature] = str(random.randint(1, 10)) + "/" + str(random.randint(1, 10)) + unit
             else:
                 self.sample[feature] = random.sample(self.features_values[feature], 1)[0]
+                self.string_fields.add(random.sample(self.features_values[feature], 1)[0])
     
     
     def random_sampling(self) -> dict:
@@ -192,14 +198,14 @@ class sampling():
         features_list = list(set(self.features_list) - set(self.most_relevant_features_list))
         most_relevant_features_list = self.most_relevant_features_list.copy()
         
-        sample_size = int(len(features_list) * self.p) ## sample_size [5, 6, 7, 8]
+        sample_size = int(random.uniform(5, 9)) # sample_size is between 5 and 8
         most_relevant_features_size = int(sample_size * self.most_relevant_p)
-                
-        if sample_size < 1: # if sample_size is too small, set the two sizes to 1
-            sample_size = 1
-            most_relevant_features_size = 1
             
         self.sample = {"class": self.component_class, "category": self.component_name}
+        if self.component_class in self.config_class_name_keys: # check if the component's class is in config_class_name
+            if random.uniform(0, 1) < 0.2:
+                self.sample["input class"] = "".join(random.sample(config_class_name[self.component_class], 1))
+        
         if "necessary" in self.component_config_class_features: # check if the component has a necessary feature
             sample_features = self.config_class_features[self.component_class]["necessary"]
             extended_sample_features = self.exist_in_pair(sample_features)
@@ -226,6 +232,7 @@ class sampling():
 
 
 config_class_features = read_data("config/config-class-features.json")
+config_class_name = read_data("config/config-class-name.json")
 config_classinfo = read_data("config/config-classinfo.json")
 config_numeric_fields = read_data("config/config-numeric-fields.json")
 config_dynamic_units = read_data("config/config-dynamic-units.json")
