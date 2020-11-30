@@ -1,0 +1,186 @@
+{
+  "Resistors": [
+    "Res",
+    "res",
+    "Resistors",
+    "电阻",
+    "贴片电阻"
+  ],
+  "Connectors": [
+    "Connectors",
+    "Connect",
+    "连接器"
+  ],
+  "Connector Support": [
+    "Connect Support",
+    "Connector Support",
+    "连接辅助"
+  ],
+  "Capacitors": [
+    "Cap",
+    "cap",
+    "Capacitors",
+    "电容",
+    "贴片电容"
+  ],
+  "Oscillators": [
+    "Oscillators",
+    "Oscil",
+    "振荡器"
+  ],
+  "Crystals/Resonators": [
+    "Crystals",
+    "Resonator",
+    "共振器"
+  ],
+  "Power Circuits": [
+    "Power Circuits",
+    "Power",
+    "电源电路"
+  ],
+  "Switches": [
+    "Switches",
+    "Switch",
+    "开关"
+  ],
+  "Sensors/Transducers": [
+    "Sensors",
+    "Transducers",
+    "传感器"
+  ],
+  "Optoelectronics": [
+    "Optoelectronics",
+    "LED",
+    "Led",
+    "Opto",
+    "光电"
+  ],
+  "Fiber Optics": [
+    "Fiber Optics",
+    "Fiber",
+    "光纤"
+  ],
+  "Circuit Protection": [
+    "Circuit Protection",
+    "Protection",
+    "Protect",
+    "电路保护"
+  ],
+  "Memory": [
+    "Memory",
+    "记忆体",
+    "内存"
+  ],
+  "Signal Circuits": [
+    "Signal Circuits",
+    "Signal",
+    "信号电路"
+  ],
+  "Inductors": [
+    "Inductors",
+    "Induct",
+    "电感"
+  ],
+  "Terminal Blocks": [
+    "Terminal Blocks",
+    "Terminal",
+    "终端"
+  ],
+  "Sockets": [
+    "Sockets",
+    "插座"
+  ],
+  "Microcontrollers and Processors": [
+    "Microcontrollers",
+    "Processors",
+    "处理器"
+  ],
+  "RF and Microwave": [
+    "RF",
+    "Microwave",
+    "微波"
+  ],
+  "Logic": [
+    "Logic",
+    "逻辑电路"
+  ],
+  "Transistors": [
+    "Trans",
+    "Transistors",
+    "三级管"
+  ],
+  "Relays": [
+    "Relays",
+    "Relay",
+    "延迟电路"
+  ],
+  "Converters": [
+    "Converters",
+    "Convert",
+    "转换器"
+  ],
+  "Filters": [
+    "FIlters",
+    "Filt",
+    "滤波器"
+  ],
+  "Trigger Devices": [
+    "Trigger",
+    "Trig",
+    "触发器"
+  ],
+  "RC Networks": [
+    "RC networks",
+    "RC"
+  ],
+  "Programmable Circiuts": [
+    "Programmable Circuits",
+    "Program Circuits",
+    "编程电路"
+  ],
+  "Telecommunication Circuits": [
+    "Telecommunication Circuits",
+    "Telecommunication",
+    "Tele Circuits",
+    "tele",
+    "通讯电路"
+  ],
+  "Drivers And Interfaces": [
+    "Drivers",
+    "Interfaces"
+  ],
+  "Amplifier Circuits": [
+    "Amplifier",
+    "Amp",
+    "放大电路"
+  ],
+  "Thermal Support Devices": [
+    "Thermal Support Devices",
+    "Thermal Support",
+    "Thermal",
+    "Heat",
+    "散热"
+  ],
+  "Transformers": [
+    "Transformers",
+    "Trans"
+  ],
+  "Consumer Circuits": [
+    "consumer",
+    "Other",
+    "Consumer Circuits",
+    "消费电子"
+  ],
+  "Batteries": [
+    "battery",
+    "电池",
+    "Batteries"
+  ],
+  "Diodes": [
+    "diodes",
+    "二极管"
+  ],
+  "Programmable Logic": [
+    "Programmable Logic"
+  ]
+}
