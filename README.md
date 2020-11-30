@@ -45,7 +45,8 @@ s.random_sampling()
 
 *Example:*
 ```python
-connect(s.random_sampling())
+text, text_sep = connect(s.random_sampling())
+text
 ```
 
 *Output:*
