@@ -10,8 +10,6 @@
 |----|----|----|
 |**parameters:**|**filename:**|*str*|
 | | |the name of a component file (e.g. `Array_Network_Resistors.json`)|
-| |**p:**|*int*|
-| | |the portion of features needs sampling|
 | |**most_relevant_p:**|*int*|
 | | |the portion of most relevant features in a sample|
 
@@ -19,7 +17,7 @@
 ```python
 from sampling import *
 
-s = sampling("Array_Network_Resistors.json", 0.2, 0.6)
+s = sampling("Array_Network_Resistors.json", 0.6)
 ```
 
 ### 2. call *random_sampling*  
@@ -33,6 +31,7 @@ s.random_sampling()
 ```
 {'class': 'Resistors',
  'category': 'Array Network Resistors',
+ 'input class': 'res',
  'Resistance': '9790.0O',
  'TemperatureCoefficient': '100ppm/°C',
  'SizeCode': '3040',
