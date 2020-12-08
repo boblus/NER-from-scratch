@@ -2,7 +2,6 @@
 
 *nota bene:*  
 \* please put all the configuration files under `formatData/config`  
-\* do not sample on `Analog_Special_Function_Converters.json`, `Carbon_Composition_Resistors.json`, and `Carbon_Film_Resistors.json`
 
 ### 1. initialize *sampling*  
 
