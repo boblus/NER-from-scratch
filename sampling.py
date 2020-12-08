@@ -48,6 +48,19 @@ def preprocess_config_class_features(config_class_features: dict) -> dict:
     return output
 
 
+def preprocess_config_classinfo(config_classinfo: dict) -> dict:
+    """
+    config_classinfo: the class information of all components (in "config/config-classinfo.json")
+    returns a preprocessed config-classinfo
+    """
+    output = defaultdict(defaultdict)
+    for classname in config_classinfo:
+        for name in config_classinfo[classname]:
+            copy = name.replace("/", " ")
+            output[copy] = name
+    return output
+
+
 def preprocess_config_numeric_fields(config_numeric_fields: list) -> list:
     """
     config_numeric_fields: the numeric fields of all components (in "config/config-numeric-fields.json")
@@ -72,36 +85,49 @@ def extract_feature_value(filename: str) -> dict:
     return features_values
 
 
+def insert_blank(text: str) -> str:
+    """
+    text: the text to be modified
+    returns the modified text (blank inserted)
+    """
+    output = ""
+    for i in range(len(text)):
+        if str.isdigit(text[i]):
+            output += text[i] + " "
+        else:
+            output += text[i]
+    return output
+
+
 def connect(sample: dict) -> str:
     """
     sample: the output of sampling.random_sampling()
     returns the concatenation of values
     """
-    output = ''
+    text, text_sep= "", ""
     deliminter_list = ['#', ',', '/', ';', ':', '-', '_']
     deliminter = random.sample(deliminter_list, 1)[0]
     for key, value in sample.items():
         if key not in ["class", "category", "input class"]: 
             if random.uniform(0, 1) > 0.9: # 10% chance to use another deliminter
-                output = output + str(value) + random.sample(deliminter_list, 1)[0]
+                text += str(value) + random.sample(deliminter_list, 1)[0]
             else:
-                output = output + str(value) + deliminter
-    return re.sub("(" + "|".join(deliminter_list) + ")$", "", output)
+                text += str(value) + deliminter
+            text_sep += str(value) + "[SEP]"
+    output = insert_blank(re.sub("(" + "|".join(deliminter_list) + ")$", "", text))
+    output_sep = insert_blank(text_sep.rstrip("[SEP]"))
+    return output, output_sep
 
 
 class sampling():
-    def __init__(
-        self,
-        filename: str,
-        most_relevant_p: float
-    ):
+    def __init__(self, filename: str, most_relevant_p: float):
         """
         filename: the name of a component file (e.g. "Active_Filters.json")
         most_relevant_p: the portion of most relevant features in a sample
         """
-        self.component_name = os.path.splitext(filename)[0].replace("_"," ") # obtain the name of the component (e.g. "Active Filters")
-        self.config_class_features = preprocess_config_class_features(config_class_features)
-        self.config_numeric_fields = preprocess_config_numeric_fields(config_numeric_fields)
+        self.component_name = preprocessed_config_classinfo[os.path.splitext(filename)[0].replace("_"," ")] # obtain the name of the component (e.g. "Active Filters")
+        self.config_class_features = config_class_features
+        self.config_numeric_fields = config_numeric_fields
         self.config_class_name_keys = list(config_class_name.keys())
         self.config_dynamic_units_keys = list(config_dynamic_units.keys())
         self.pair_params = pair_params
@@ -116,7 +142,7 @@ class sampling():
         # obtain the class of the component (e.g. "Filters")
         # component_name "Array Network Resistors" appears as "Array/Network Resistors" in config_classinfo
         for key in config_classinfo:
-            if self.component_name in [item.replace("/"," ") for item in config_classinfo[key]]:
+            if self.component_name in config_classinfo[key]:
                 self.component_class = key    
 
         self.component_config_class_features = list(config_class_features[self.component_class].keys())
@@ -134,17 +160,20 @@ class sampling():
         sample_features: features need sampling
         returns a new list of sample_features
         """
-        output = []
-        for feature in sample_features:
-            output.append(feature)
-            if feature in self.pair_params_keys:
-                if random.uniform(0, 1) < 0.9:
-                    output.append(self.pair_params[feature])
-            if feature in self.pair_params_values:
-                if random.uniform(0, 1) < 0.9:
-                    inversed_pair_params = {value: key for key, value in self.pair_params.items()}
-                    output.append(inversed_pair_params[feature])
-        return output
+        if self.component_name in exclude_from_pair: # for components in exclude_from_pair, they do not have pair features
+            return sample_features
+        else:
+            output = []
+            for feature in sample_features:
+                output.append(feature)
+                if feature in self.pair_params_keys:
+                    if random.uniform(0, 1) < 0.9:
+                        output.append(self.pair_params[feature])
+                if feature in self.pair_params_values:
+                    if random.uniform(0, 1) < 0.9:
+                        inversed_pair_params = {value: key for key, value in self.pair_params.items()}
+                        output.append(inversed_pair_params[feature])
+            return output
 
     
     def sample_value(self, sample_features: list):
@@ -206,7 +235,9 @@ class sampling():
             if random.uniform(0, 1) < 0.2:
                 self.sample["input class"] = "".join(random.sample(config_class_name[self.component_class], 1))
         
-        if "necessary" in self.component_config_class_features: # check if the component has a necessary feature
+        # test if the component has a necessary feature
+        # if the component is a Varistor, it does not have the necessary "Resistence" feature
+        if self.component_name != "Varistor" and "necessary" in self.component_config_class_features:
             sample_features = self.config_class_features[self.component_class]["necessary"]
             extended_sample_features = self.exist_in_pair(sample_features)
             self.sample_value(extended_sample_features)
@@ -231,9 +262,48 @@ class sampling():
         return self.sample
 
 
-config_class_features = read_data("config/config-class-features.json")
+config_class_features = preprocess_config_class_features(read_data("config/config-class-features.json"))
 config_class_name = read_data("config/config-class-name.json")
 config_classinfo = read_data("config/config-classinfo.json")
-config_numeric_fields = read_data("config/config-numeric-fields.json")
+preprocessed_config_classinfo = preprocess_config_classinfo(config_classinfo)
+config_numeric_fields = preprocess_config_numeric_fields(read_data("config/config-numeric-fields.json"))
 config_dynamic_units = read_data("config/config-dynamic-units.json")
 pair_params = read_data("config/pair-params")
+exclude_from_pair = ['Variable Resistors',
+                     'Trimmer Potentiometers',
+                     'RF SMC/SSMC Connectors',
+                     'Fiber Optic Switches',
+                     'RF Twinax/Triax/Quadax Connectors',
+                     'Reed Relays',
+                     'Carbon Film Resistors',
+                     'RF SC Connectors',
+                     'Slotted Switch',
+                     'Other RF Connectors',
+                     'Optocoupler',
+                     'Analog Special Function Converters',
+                     'Photo ICs',
+                     'Terminal Blocks',
+                     'Fiber Optic Modulators',
+                     'Potentiometers',
+                     'RF Blindmate Connectors',
+                     'RF Adapters',
+                     'RF SMB/SSMB Connectors',
+                     'RF C Connectors',
+                     'Metal Strip Resistor',
+                     'Other Interconnects',
+                     'Photo Diodes',
+                     'RF SMA/SSMA Connectors',
+                     'Fiber Optic SC Connectors',
+                     'Digital to Analog Converters',
+                     'Noise Generators',
+                     'RF TNC Connectors',
+                     'Jumper',
+                     'RF N Connectors',
+                     'RF/Microwave Amplifiers',
+                     'Varistor',
+                     'SHV Connectors',
+                     'RF UHF Connectors',
+                     'RF BNC Connectors',
+                     'RF MCX/MMCX Connectors',
+                     'Carbon Composition Resistors'
+                    ]
